@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jio Number Checker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 35px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .header h1 {
+            font-size: 26px;
+            color: #1a1a2e;
+        }
+        .header h1 span { color: #667eea; }
+        .header p { color: #888; margin-top: 4px; font-size: 14px; }
+        
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+        .step-badge {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: #999;
+            transition: all 0.3s;
+        }
+        .step-badge.active { background: #667eea; color: white; box-shadow: 0 4px 15px rgba(102,126,234,0.4); }
+        .step-badge.done { background: #2ecc71; color: white; }
+        .step-line {
+            width: 30px; height: 2px;
+            background: #e0e0e0;
+            align-self: center;
+            transition: all 0.3s;
+        }
+        .step-line.done { background: #2ecc71; }
+
+        .section { display: none; }
+        .section.show { display: block; }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #555;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+        .input-group input:disabled { background: #f5f5f5; }
+        .input-group input.otp-input { letter-spacing: 8px; font-size: 24px; }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .btn-success { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .btn-danger { background: linear-gradient(135deg, #eb3349, #f45c43); }
+
+        .msg {
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin: 12px 0;
+            font-size: 14px;
+            line-height: 1.5;
+            display: none;
+        }
+        .msg.show { display: block; }
+        .msg.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .msg.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .msg.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+        .info-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            display: none;
+        }
+        .info-box.show { display: block; }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 7px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #888; }
+        .info-value { font-weight: 600; color: #333; }
+        .info-value.jio { color: #667eea; }
+        .info-value.prime { color: #e67e22; }
+
+        .result-box {
+            background: #1e1e1e;
+            color: #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        .result-box.show { display: block; }
+
+        .spinner {
+            width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+            display: none;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .btn-text { display: inline; }
+        .loading .btn-text { display: none; }
+        .loading .spinner { display: block; }
+
+        .footer { text-align: center; margin-top: 18px; color: #bbb; font-size: 11px; }
+        .footer a { color: #667eea; text-decoration: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="header">
+        <h1>📱 <span>Jio</span> Checker</h1>
+        <p>Jio Number Verification &amp; Recharge Plans</p>
+    </div>
+
+    <!-- Steps -->
+    <div class="steps">
+        <div class="step-badge active" id="s1">1</div>
+        <div class="step-line" id="l1"></div>
+        <div class="step-badge" id="s2">2</div>
+        <div class="step-line" id="l2"></div>
+        <div class="step-badge" id="s3">3</div>
+        <div class="step-line" id="l3"></div>
+        <div class="step-badge" id="s4">4</div>
+    </div>
+
+    <!-- Step 1: Enter Number -->
+    <div class="section show" id="step1">
+        <div class="input-group">
+            <label>📞 Enter Indian Jio Mobile Number</label>
+            <input type="tel" id="phone" placeholder="e.g. 9876543210" maxlength="12" autofocus>
+        </div>
+        <div class="msg" id="msg1"></div>
+        <div class="info-box" id="infoBox">
+            <div class="info-row"><span class="info-label">📱 Number</span><span class="info-value jio" id="dispPhone">-</span></div>
+            <div class="info-row"><span class="info-label">💳 Billing Type</span><span class="info-value" id="dispBilling">-</span></div>
+            <div class="info-row"><span class="info-label">⭐ Prime Member</span><span class="info-value" id="dispPrime">-</span></div>
+        </div>
+        <button class="btn btn-primary" id="btn1" onclick="step1()">
+            <span class="btn-text">🔍 Check &amp; Send OTP</span>
+            <div class="spinner"></div>
+        </button>
+    </div>
+
+    <!-- Step 2: Enter OTP -->
+    <div class="section" id="step2">
+        <div class="msg info show" id="otpInfo">📲 OTP sent! Enter the code below.</div>
+        <div class="input-group">
+            <label>🔐 Enter OTP</label>
+            <input type="text" id="otp" class="otp-input" placeholder="• • • • • •" maxlength="6" inputmode="numeric">
+        </div>
+        <div class="msg" id="msg2"></div>
+        <button class="btn btn-success" id="btn2" onclick="step2()">
+            <span class="btn-text">✅ Verify OTP</span>
+            <div class="spinner"></div>
+        </button>
+    </div>
+
+    <!-- Step 3: Fetching -->
+    <div class="section" id="step3">
+        <div style="text-align:center;padding:30px 0;">
+            <div class="spinner" style="display:block;width:40px;height:40px;border-width:4px;border-color:#667eea transparent transparent transparent;"></div>
+            <p style="margin-top:16px;color:#666;">🔄 Fetching recharge plans...</p>
+        </div>
+        <div class="msg" id="msg3"></div>
+    </div>
+
+    <!-- Step 4: Results -->
+    <div class="section" id="step4">
+        <div class="msg success show" id="msg4">✅ Plans fetched successfully!</div>
+        <div class="result-box show" id="resultBox"></div>
+        <button class="btn btn-primary" onclick="resetAll()" style="margin-top:12px;">
+            <span class="btn-text">🔄 Check Another Number</span>
+        </button>
+    </div>
+
+    <div class="footer">
+        ⚠️ For educational purposes. Use only with your own number.<br>
+        <a onclick="resetAll()">🔁 Start Over</a>
+    </div>
+</div>
+
+<script>
+function ui(msgEl, type, text) {
+    const el = typeof msgEl === 'string' ? document.getElementById(msgEl) : msgEl;
+    el.className = 'msg ' + type + ' show';
+    el.innerHTML = text;
+}
+
+function clearMsg(id) {
+    const el = document.getElementById(id);
+    el.className = 'msg';
+    el.innerHTML = '';
+}
+
+function goStep(n) {
+    for (let i = 1; i <= 4; i++) {
+        document.getElementById('s'+i).classList.remove('active','done');
+        document.getElementById('step'+i).classList.remove('show');
+        if (i < 4) {
+            const l = document.getElementById('l'+i);
+            if (l) l.classList.remove('done');
+        }
+    }
+    for (let i = 1; i < n; i++) {
+        document.getElementById('s'+i).classList.add('done');
+        const l = document.getElementById('l'+i);
+        if (l) l.classList.add('done');
+    }
+    document.getElementById('s'+n).classList.add('active');
+    document.getElementById('step'+n).classList.add('show');
+}
+
+function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+        btn.classList.add('loading');
+        btn.disabled = true;
+    } else {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+    }
+}
+
+async function step1() {
+    const phone = document.getElementById('phone').value.trim();
+    if (!phone) { ui('msg1','error','❌ Please enter a phone number'); return; }
+    
+    setLoading('btn1', true);
+    clearMsg('msg1');
+    
+    try {
+        // First check if number is valid Jio
+        const fd = new FormData();
+        fd.append('phone', phone);
+        
+        let res = await fetch('/api/check', { method:'POST', body:fd });
+        let data = await res.json();
+        
+        if (!data.ok) {
+            ui('msg1','error', data.error);
+            setLoading('btn1', false);
+            return;
+        }
+        
+        // Show number info
+        document.getElementById('dispPhone').textContent = data.phone;
+        document.getElementById('dispBilling').textContent = data.billing;
+        document.getElementById('dispPrime').textContent = data.prime ? '✅ Yes' : '❌ No';
+        document.getElementById('infoBox').classList.add('show');
+        ui('msg1','success', '✅ Valid Jio number! Sending OTP...');
+        
+        // Now send OTP
+        res = await fetch('/api/send-otp', { method:'POST' });
+        data = await res.json();
+        
+        if (!data.ok) {
+            ui('msg1','error', data.error);
+            setLoading('btn1', false);
+            return;
+        }
+        
+        ui('msg1','success', '✅ OTP sent to your phone!');
+        setTimeout(() => {
+            goStep(2);
+            document.getElementById('otp').focus();
+        }, 800);
+        
+    } catch(e) {
+        ui('msg1','error', '❌ Connection error: ' + e.message);
+    }
+    setLoading('btn1', false);
+}
+
+async function step2() {
+    const otp = document.getElementById('otp').value.trim();
+    if (!otp || otp.length < 4) { ui('msg2','error','❌ Please enter the OTP'); return; }
+    
+    setLoading('btn2', true);
+    clearMsg('msg2');
+    
+    try {
+        const fd = new FormData();
+        fd.append('otp', otp);
+        
+        let res = await fetch('/api/verify-otp', { method:'POST', body:fd });
+        let data = await res.json();
+        
+        if (!data.ok) {
+            ui('msg2','error', data.error);
+            setLoading('btn2', false);
+            return;
+        }
+        
+        ui('msg2','success', '✅ OTP Verified!');
+        
+        // Move to fetching step
+        goStep(3);
+        
+        // Now fetch plans
+        res = await fetch('/api/fetch-plans', { method:'POST' });
+        data = await res.json();
+        
+        if (!data.ok) {
+            ui('msg3','error', data.error);
+            return;
+        }
+        
+        // Build results HTML
+        let html = '<div style="margin-bottom:12px;color:#2ecc71;font-size:14px;">📱 Number: +91 ' + data.phone + '</div>\n';
+        data.results.forEach((r, i) => {
+            html += '<div style="margin-bottom:14px;border-bottom:1px solid #333;padding-bottom:12px;">';
+            html += '<div style="color:#667eea;font-size:13px;margin-bottom:6px;">🌐 Source ' + (i+1) + '</div>';
+            html += '<div style="color:#888;font-size:11px;margin-bottom:4px;">URL: ' + r.url + ' | Status: ' + r.status + '</div>';
+            html += '<pre style="margin-top:6px;white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.5;">' + escapeHtml(r.content) + '</pre>';
+            html += '</div>';
+        });
+        
+        document.getElementById('resultBox').innerHTML = html;
+        goStep(4);
+        
+    } catch(e) {
+        ui('msg2','error', '❌ Error: ' + e.message);
+        setLoading('btn2', false);
+    }
+    setLoading('btn2', false);
+}
+
+function escapeHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t;
+    return d.innerHTML;
+}
+
+async function resetAll() {
+    await fetch('/api/reset', { method:'POST' });
+    location.reload();
+}
+
+// Enter key support
+document.getElementById('phone').addEventListener('keyup', e => { if(e.key==='Enter') step1(); });
+document.getElementById('otp').addEventListener('keyup', e => { if(e.key==='Enter') step2(); });
+document.getElementById('otp').addEventListener('input', function() { if(this.value.length===6) step2(); });
+</script>
+</body>
+</html>
